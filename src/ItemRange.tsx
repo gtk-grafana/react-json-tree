@@ -4,6 +4,7 @@ import {
   CircularCache,
   CommonInternalProps,
   KeyPath,
+  OnExpandEvent,
   ScrollToPath,
 } from "./types.js";
 import styles from "./styles/itemRange.module.scss";
@@ -21,7 +22,15 @@ interface Props extends CommonInternalProps {
 }
 
 export default function ItemRange(props: Props) {
-  const { from, to, renderChildNodes, nodeType, scrollToPath, keyPath } = props;
+  const {
+    from,
+    to,
+    renderChildNodes,
+    nodeType,
+    scrollToPath,
+    keyPath,
+    onExpand,
+  } = props;
   let initialExpanded = false;
   if (scrollToPath) {
     const [index] = scrollToPath;
@@ -35,9 +44,16 @@ export default function ItemRange(props: Props) {
   }
 
   const [expanded, setExpanded] = useState<boolean>(initialExpanded);
-  const handleClick = useCallback(() => {
-    setExpanded(!expanded);
-  }, [expanded]);
+  const handleClick = useCallback(
+    (e: OnExpandEvent) => {
+      setExpanded(!expanded);
+
+      if (onExpand !== undefined) {
+        onExpand(e, keyPath, expanded);
+      }
+    },
+    [expanded],
+  );
 
   return expanded ? (
     <div className={`${styles.itemRange}`}>
@@ -48,7 +64,7 @@ export default function ItemRange(props: Props) {
       <JSONArrow
         nodeType={nodeType}
         expanded={false}
-        onClick={handleClick}
+        onNodeExpand={handleClick}
         arrowStyle="double"
       />
       {`${from} ... ${to}`}

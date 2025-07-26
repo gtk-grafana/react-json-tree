@@ -1,31 +1,32 @@
 import React, { EventHandler } from "react";
 import styles from "./styles/JSONArrow.module.scss";
+import { OnExpandEvent } from "./types.ts";
 
 interface Props {
   arrowStyle?: "single" | "double";
   expanded: boolean;
   nodeType: string;
-  onClick: () => void;
+  onNodeExpand: (e: OnExpandEvent) => void;
 }
 
 export default function JSONArrow({
   arrowStyle = "single",
   expanded,
-  onClick,
+  onNodeExpand,
 }: Props) {
   return (
     <div
       role={"button"}
       aria-expanded={expanded}
       tabIndex={0}
-      onClick={onClick}
+      onClick={onNodeExpand}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          onClick();
+          onNodeExpand(event);
         }
       }}
-      className={`${styles.arrow} ${expanded ? styles.arrowExpanded : ""} ${arrowStyle === "single" ? styles.arrowArrowStyleSingle : styles.arrowArrowStyleDouble}`}
+      className={`${styles.arrow} ${expanded ? styles.arrowExpanded : ""}`}
     >
       {/* @todo let implementer define custom arrow object */}
       {"\u25B6"}

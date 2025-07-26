@@ -40,6 +40,12 @@ export type ShouldExpandNodeInitially = (
   level: number,
 ) => boolean;
 
+export type ShouldExpandNode = (
+  keyPath: KeyPath,
+  data: unknown,
+  level: number,
+) => boolean | undefined;
+
 export type PostprocessValue = (value: unknown) => unknown;
 
 export type IsCustomNode = (value: unknown) => boolean;
@@ -48,10 +54,16 @@ export type SortObjectKeys = ((a: unknown, b: unknown) => number) | boolean;
 
 export type CircularCache = unknown[];
 
+export type OnExpandEvent =
+  | React.MouseEvent<HTMLDivElement>
+  | React.KeyboardEvent<HTMLDivElement>
+  | React.MouseEvent<HTMLSpanElement>;
+
 export interface CommonExternalProps {
   keyPath: KeyPath;
   labelRenderer: LabelRenderer;
   valueRenderer: ValueRenderer;
+  // Sets expanded state on initial render, will not update expanded state on subsequent renders to prevent changing nodes user has interacted with already
   shouldExpandNodeInitially: ShouldExpandNodeInitially;
   hideRoot: boolean;
   hideRootExpand: boolean;
@@ -62,6 +74,7 @@ export interface CommonExternalProps {
   sortObjectKeys: SortObjectKeys;
   valueWrap: string;
   scrollToPath?: ScrollToPath;
+  onExpand?: (event: OnExpandEvent, keyPath: KeyPath, expand: boolean) => void;
 }
 
 export interface CommonInternalProps extends CommonExternalProps {

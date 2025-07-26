@@ -1,7 +1,12 @@
 import React from "react";
 import { Map } from "immutable";
-import { JSONTree, KeyPath, areKeyPathsEqual } from "react-json-tree";
-import { ScrollToPath } from "../../src/types";
+import {
+  JSONTree,
+  KeyPath,
+  areKeyPathsEqual,
+  doesNodeContainNode,
+  ScrollToPath,
+} from "react-json-tree";
 
 const getItemString = (type: string) => (
   <span>
@@ -31,6 +36,26 @@ const data: Record<string, any> = {
   bool: true,
   date: new Date(),
   error: new Error(longString),
+  arrayOfObjects: [
+    Array.from({ length: 1000 }).map((e) => ({
+      foo: {
+        bar: "baz",
+        nested: {
+          bar: "baz2",
+          moreNested: {
+            bar: "baz3",
+            evenMoreNested: {
+              veryNested: {
+                insanelyNested: {
+                  ridiculouslyDeepValue: "Hello",
+                },
+              },
+            },
+          },
+        },
+      },
+    })),
+  ],
   object: {
     foo: {
       bar: "baz",
@@ -108,11 +133,11 @@ const App = () => (
       <JSONTree
         data={data}
         shouldExpandNodeInitially={(keyPath: KeyPath) => {
-          // Caller needs to ensure that parent node of scrollToPath is expanded for scrollTo to work on initial render, otherwise it will scroll to when the parent node/collection is expanded
-          return !!areKeyPathsEqual(
-            keyPath,
-            hugeArrayKeyPath.slice(keyPath.length * -1),
-          );
+            // Caller needs to ensure that parent node of scrollToPath is expanded for scrollTo to work on initial render, otherwise it will scroll to when the parent node/collection is expanded
+            return !!areKeyPathsEqual(
+                keyPath,
+                hugeArrayKeyPath.slice(keyPath.length * -1),
+            );
         }}
         scrollToPath={hugeArrayKeyPath}
       />
@@ -241,7 +266,56 @@ const App = () => (
         }))}
       />
     </div>
+
+    <h3>Shift + click to toggle visualizing all child nodes</h3>
+    <div style={{ background: "#222" }}>
+      <OnExpandExample />
+    </div>
+    <br />
   </div>
 );
+
+function OnExpandExample() {
+  const [keyPathsToExpand, setKeyPathsToExpand] = React.useState<KeyPath[]>([]);
+  return (
+    <div>
+      <div style={{ color: "white" }}>
+        KeyPaths that will be expanded: {JSON.stringify(keyPathsToExpand)}
+      </div>
+
+      <JSONTree
+        shouldExpandNodeInitially={(keyPath, data, level) => {
+          for (let i = 0; i < keyPathsToExpand.length; i++) {
+            if (doesNodeContainNode(keyPathsToExpand[i], keyPath)) {
+              return true;
+            }
+          }
+
+          return level < 1;
+        }}
+        data={data}
+        onExpand={(e, keyPath, expanded) => {
+          if (e.ctrlKey || e.shiftKey || e.altKey) {
+            if (expanded) {
+              setKeyPathsToExpand([
+                ...keyPathsToExpand.filter(
+                  (existingKeyPath) =>
+                    !areKeyPathsEqual(existingKeyPath, keyPath),
+                ),
+                keyPath,
+              ]);
+            } else {
+              if (keyPathsToExpand.length) {
+                setKeyPathsToExpand(
+                  keyPathsToExpand.filter((k) => !areKeyPathsEqual(k, keyPath)),
+                );
+              }
+            }
+          }
+        }}
+      />
+    </div>
+  );
+}
 
 export default App;
